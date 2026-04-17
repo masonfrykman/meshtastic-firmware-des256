@@ -64,11 +64,26 @@ int32_t TempSensorConnector::runOnce() {
         }
         
         auto chars = tempService->getCharacteristics(true);
+        std::string val;
         for(auto i = chars->begin(); i != chars->end(); i++) {
             auto x = *i;
             fastLog("Characteristic (selected service): " + x->getUUID().toString());
             fastLog("Value: " + std::to_string(x->readValue<uint16_t>()));
+            val = std::to_string(x->readValue<uint16_t>());
         }
+
+        auto dp = this->allocDataPacket();
+        dp->channel = 1;
+        dp->decoded.portnum = meshtastic_PortNum_TEXT_MESSAGE_APP;
+        // TODO: need to get the data somehow
+
+        for(size_t i = 0; i <= val.length(); i++) {
+            dp->decoded.payload.bytes[i] = val.c_str()[i];
+        }
+        dp->decoded.payload.size = strlen(val.c_str());
+
+        service->sendToMesh(dp, RX_SRC_LOCAL, true);
+        return 1000 * 15;
     }
 
     return 1000 * 10;

@@ -2,12 +2,14 @@
 
 #include "configuration.h"
 #include "concurrency/OSThread.h"
+#include "mesh/SinglePortModule.h"
+#include "MeshService.h"
 
 #include <NimBLEScan.h>
 #include <NimBLEDevice.h>
 #include <NimBLEClient.h>
 
-class TempSensorConnector: public concurrency::OSThread {
+class TempSensorConnector: public SinglePortModule, public concurrency::OSThread {
     private:
         bool setupFlag = false;
 
@@ -18,7 +20,7 @@ class TempSensorConnector: public concurrency::OSThread {
         }
 
     public:
-        TempSensorConnector() : concurrency::OSThread("!!DES256!!TempSensor") {}
+        TempSensorConnector() : SinglePortModule("!!!DES256 TempSensor!!!", meshtastic_PortNum(256)), concurrency::OSThread("!!DES256!!TempSensor") {}
 
         virtual int32_t runOnce() override;
 
