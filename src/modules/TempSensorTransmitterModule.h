@@ -1,6 +1,9 @@
 #pragma once
 
 #include "configuration.h"
+
+#if TEMPSNSR_TRANSMITTER
+
 #include "concurrency/OSThread.h"
 #include "mesh/SinglePortModule.h"
 #include "MeshService.h"
@@ -9,7 +12,7 @@
 #include <NimBLEDevice.h>
 #include <NimBLEClient.h>
 
-class TempSensorConnector: public SinglePortModule, public concurrency::OSThread {
+class TempSensorTransmitter: public SinglePortModule, public concurrency::OSThread {
     private:
         bool setupFlag = false;
 
@@ -26,5 +29,6 @@ class TempSensorConnector: public SinglePortModule, public concurrency::OSThread
 
 };
 
-extern TempSensorConnector* tempSensorMod;
+extern TempSensorTransmitter* tempSensorMod;
 
+#endif

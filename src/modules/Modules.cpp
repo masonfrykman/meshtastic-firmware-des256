@@ -109,8 +109,12 @@
 #endif
 
 
-#include "modules/TempSensorModule.h"
-
+#if TEMPSNSR_TRANSMITTER
+#include "modules/TempSensorTransmitterModule.h"
+#endif
+#if TEMPSNSR_RECEIVER
+#include "modules/TempSensorReceiverModule.h"
+#endif
 
 /**
  * Create module instances here.  If you are adding a new module, you must 'new' it here (or somewhere else)
@@ -243,7 +247,14 @@ void setupModules()
 #endif
 #ifdef ARCH_ESP32
     // Only run on an esp32 based device.
-    new TempSensorConnector();
+
+#if TEMPSNSR_RECEIVER
+    new TempSensorReceiver();
+#endif
+#if TEMPSNSR_TRANSMITTER
+    new TempSensorTransmitter();
+#endif
+
 #if defined(USE_SX1280) && !MESHTASTIC_EXCLUDE_AUDIO
     audioModule = new AudioModule();
 #endif

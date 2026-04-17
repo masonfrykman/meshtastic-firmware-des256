@@ -1,8 +1,10 @@
-#include "TempSensorModule.h"
+#include "TempSensorTransmitterModule.h"
+
+#if TEMPSNSR_TRANSMITTER
 
 #define BLUEFRUIT_HW_ADDR "d1:f0:8a:18:1b:c2"
 
-int32_t TempSensorConnector::runOnce() {
+int32_t TempSensorTransmitter::runOnce() {
     if(!setupFlag) {
         // wait until NimBLEDevice is initialized
         if(!NimBLEDevice::getInitialized()) {
@@ -88,3 +90,5 @@ int32_t TempSensorConnector::runOnce() {
 
     return 1000 * 10;
 }
+
+#endif
