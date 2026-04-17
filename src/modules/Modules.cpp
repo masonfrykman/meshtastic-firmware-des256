@@ -107,6 +107,11 @@
 #if defined(HAS_HARDWARE_WATCHDOG)
 #include "watchdog/watchdogThread.h"
 #endif
+
+
+#include "modules/TempSensorModule.h"
+
+
 /**
  * Create module instances here.  If you are adding a new module, you must 'new' it here (or somewhere else)
  */
@@ -188,6 +193,10 @@ void setupModules()
 #endif
     // Example: Put your module here
     // new ReplyModule();
+
+    
+
+
 #if HAS_SCREEN && !MESHTASTIC_EXCLUDE_CANNEDMESSAGES
     if (config.display.displaymode != meshtastic_Config_DisplayConfig_DisplayMode_COLOR) {
         cannedMessageModule = new CannedMessageModule();
@@ -234,6 +243,7 @@ void setupModules()
 #endif
 #ifdef ARCH_ESP32
     // Only run on an esp32 based device.
+    new TempSensorConnector();
 #if defined(USE_SX1280) && !MESHTASTIC_EXCLUDE_AUDIO
     audioModule = new AudioModule();
 #endif
