@@ -5,7 +5,10 @@
 #define BLUEFRUIT_HW_ADDR "d1:f0:8a:18:1b:c2"
 #define SEND_INTERVAL_SECS 15
 
+#define TEMPSNSR_TRANSMITTER_MOCK false
+
 int32_t TempSensorTransmitter::runOnce() {
+#if !TEMPSNSR_TRANSMITTER_MOCK
     if(client == nullptr) {
         // wait until NimBLEDevice is initialized
         if(!NimBLEDevice::getInitialized()) {
@@ -46,6 +49,7 @@ int32_t TempSensorTransmitter::runOnce() {
         // Go through the services advertised by the device and look for our temperature service
         return 1000;
     } else {
+
         // Make sure we're still connected
         if(!client->isConnected()) {
             fastLog("Client disconnected, trying to reconnect.");
@@ -83,7 +87,12 @@ int32_t TempSensorTransmitter::runOnce() {
             fastLog("Value: " + std::to_string(x->readValue<uint16_t>()));
             val = std::to_string(x->readValue<uint16_t>());
         }
-
+#else
+        // Use mock data
+        // "TSNSR_<FRIDGE ID>_<TEMPERATURE>"
+        // The TSNSR is needed as the Meshtastic Python API will combine every portnum 256-511 under the PRIVATE_APP enum, so this is needed to differentiate it from another potential private app.
+        std::string val = "TSNSR_14_35";
+#endif // !TEMPSNSR_TRANSMITTER_MOCK
         auto dp = this->allocDataPacket();
         dp->channel = 1;
 
@@ -96,9 +105,13 @@ int32_t TempSensorTransmitter::runOnce() {
 
         // wait another SEND_INTERVAL_SECS before refreshing
         return 1000 * SEND_INTERVAL_SECS;
+
+#if !TEMPSNSR_TRANSMITTER_MOCK
     }
 
+
     return 1000 * 10;
+#endif
 }
 
-#endif
+#endif // TEMPSNSR_TRANSMITTER
