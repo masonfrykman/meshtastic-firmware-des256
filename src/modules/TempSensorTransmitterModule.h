@@ -14,8 +14,6 @@
 
 class TempSensorTransmitter: public SinglePortModule, public concurrency::OSThread {
     private:
-        bool setupFlag = false;
-
         NimBLEClient* client = nullptr;
 
         void fastLog(std::string const& msg) {
@@ -23,7 +21,7 @@ class TempSensorTransmitter: public SinglePortModule, public concurrency::OSThre
         }
 
     public:
-        TempSensorConnector() : SinglePortModule("!!!DES256 TempSensor!!!", meshtastic_PortNum(256)), concurrency::OSThread("!!DES256!!TempSensor") {}
+        TempSensorTransmitter() : SinglePortModule("!!!DES256 TempSensor!!!", meshtastic_PortNum(256)), concurrency::OSThread("!!DES256!!TempSensor") {}
 
         virtual int32_t runOnce() override;
 

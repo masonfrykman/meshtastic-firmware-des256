@@ -3,9 +3,10 @@
 #if TEMPSNSR_TRANSMITTER
 
 #define BLUEFRUIT_HW_ADDR "d1:f0:8a:18:1b:c2"
+#define SEND_INTERVAL_SECS 15
 
 int32_t TempSensorTransmitter::runOnce() {
-    if(!setupFlag) {
+    if(client == nullptr) {
         // wait until NimBLEDevice is initialized
         if(!NimBLEDevice::getInitialized()) {
             return 100;
@@ -16,6 +17,7 @@ int32_t TempSensorTransmitter::runOnce() {
         
         NimBLEAdvertisedDevice* target = nullptr;
 
+        // Search for the hardware address of our device
         for(auto i = res.begin(); i != res.end(); i++) {
             auto x = *i;
             fastLog("Found BLE Device in scan: " + x->getAddress().toString());
@@ -32,20 +34,27 @@ int32_t TempSensorTransmitter::runOnce() {
             return 1000 * 10;
         }
 
-        setupFlag = true;
-
         // Connect to the found device
         client = NimBLEDevice::createClient();
         if(!client->connect(target)) {
             LOG_ERROR("Failed to connect to our Bluefruit device! Trying again in 10 seconds");
-            setupFlag = false;
+            NimBLEDevice::deleteClient(client);
+            client = nullptr;
             return 1000 * 10;
         }
 
         // Go through the services advertised by the device and look for our temperature service
-        
+        return 1000;
     } else {
-        // We're already setup, so refresh the temperature characteristic
+        // Make sure we're still connected
+        if(!client->isConnected()) {
+            fastLog("Client disconnected, trying to reconnect.");
+            NimBLEDevice::deleteClient(client);
+            client = nullptr;
+            return 100;
+        }
+
+        // We're already setup, so refresh the temperature service & characteristic
         NimBLERemoteService* tempService;
 
         auto services = client->getServices(true);
@@ -59,9 +68,10 @@ int32_t TempSensorTransmitter::runOnce() {
         }
 
         if(tempService == nullptr) {
-            // TODO: handle error
+            LOG_ERROR("The connected device doesn't have a valid 0xd256 temperature service, disconnecting and trying again in 10 seconds.");
             client->disconnect();
-            setupFlag = false;
+            NimBLEDevice::deleteClient(client);
+            client = nullptr;
             return 1000 * 10;
         }
         
@@ -76,8 +86,6 @@ int32_t TempSensorTransmitter::runOnce() {
 
         auto dp = this->allocDataPacket();
         dp->channel = 1;
-        dp->decoded.portnum = meshtastic_PortNum_TEXT_MESSAGE_APP;
-        // TODO: need to get the data somehow
 
         for(size_t i = 0; i <= val.length(); i++) {
             dp->decoded.payload.bytes[i] = val.c_str()[i];
@@ -85,7 +93,9 @@ int32_t TempSensorTransmitter::runOnce() {
         dp->decoded.payload.size = strlen(val.c_str());
 
         service->sendToMesh(dp, RX_SRC_LOCAL, true);
-        return 1000 * 15;
+
+        // wait another SEND_INTERVAL_SECS before refreshing
+        return 1000 * SEND_INTERVAL_SECS;
     }
 
     return 1000 * 10;
