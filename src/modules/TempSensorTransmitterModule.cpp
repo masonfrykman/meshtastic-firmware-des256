@@ -4,6 +4,7 @@
 
 #define BLUEFRUIT_HW_ADDR "d1:f0:8a:18:1b:c2"
 #define SEND_INTERVAL_SECS 15
+#define FRIDGE_ID "10"
 
 #define TEMPSNSR_TRANSMITTER_MOCK false
 
@@ -79,14 +80,21 @@ int32_t TempSensorTransmitter::runOnce() {
             return 1000 * 10;
         }
         
+        // Read the temperature reading published by the temperature sensor Arduino
         auto chars = tempService->getCharacteristics(true);
-        std::string val;
+        std::string reading;
         for(auto i = chars->begin(); i != chars->end(); i++) {
             auto x = *i;
             fastLog("Characteristic (selected service): " + x->getUUID().toString());
             fastLog("Value: " + std::to_string(x->readValue<uint16_t>()));
-            val = std::to_string(x->readValue<uint16_t>());
+            reading = std::to_string(x->readValue<uint16_t>());
         }
+
+        // Assemble into valid message.
+        std::string val = "TSNSR_";
+        val.append(FRIDGE_ID);
+        val.append("_");
+        val.append(reading);
 #else
         // Use mock data
         // "TSNSR_<FRIDGE ID>_<TEMPERATURE>"
